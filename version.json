@@ -1,0 +1,7 @@
+{
+  "name": "StarBreaker: Unlimited Drill",
+  "version": "1.2.1",
+  "stack": "Vite + TypeScript + Canvas 2D",
+  "saveVersion": 1,
+  "build": "2026-11-25"
+}
