@@ -125,7 +125,7 @@ export class UIManager {
 
   private renderBottom(): void {
     const s = gameState;
-    const eq = s.equipped();
+    const eq = s.equipped().slice(0, 3);
     const topSkills = s.skillList().slice(0, 3);
 
     const slots = [
