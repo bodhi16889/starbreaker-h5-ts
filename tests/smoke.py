@@ -156,7 +156,14 @@ def main():
         time.sleep(0.8)
         over = p.evaluate("document.documentElement.scrollWidth - window.innerWidth")
         ok("640×480 無橫向溢出", over <= 0, f"+{over}px")
-        ok("640×480 可玩（有方塊）", p.evaluate("__game.blocks().filter(b=>b.alive).length") > 0)
+        # 清空星球到重生之間會有 0.2 秒空窗，最多等 3 秒
+        alive640 = 0
+        for _ in range(15):
+            alive640 = p.evaluate("__game.blocks().filter(b=>b.alive).length")
+            if alive640 > 0:
+                break
+            time.sleep(0.2)
+        ok("640×480 可玩（有方塊）", alive640 > 0, f"{alive640} blocks")
 
         # 觸控拖曳 → 手動模式
         p.set_viewport_size({"width": 390, "height": 844})

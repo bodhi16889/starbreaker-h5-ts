@@ -116,9 +116,16 @@ function draw(): void {
   /* 星球外環 */
   ctx.save();
   ctx.translate(cx, cy);
+  /* 星球邊界 */
   ctx.strokeStyle = 'rgba(90, 150, 230, .28)';
   ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(0, 0, planet.radius * scale + 8, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 0, planet.radius * scale + 6, 0, Math.PI * 2); ctx.stroke();
+  /* 飛船巡航軌道（虛線），畫在世界縮放前才不會跟著縮 */
+  ctx.setLineDash([4, 6]);
+  ctx.strokeStyle = 'rgba(120, 170, 255, .18)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(0, 0, (planet.radius + 74) * scale, 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]);
 
   ctx.scale(scale, scale);
   drawBlocks();

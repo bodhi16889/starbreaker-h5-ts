@@ -24,7 +24,7 @@ interface Fx {
   color: string; life: number; max: number; width: number;
 }
 
-const FLOATER_MAX = 18;
+const FLOATER_MAX = 14;   // 六衛星＋十武器同時打會洗版，超過就併進現有數字
 const ORBIT_DIST = 74;
 
 export class Combat {
