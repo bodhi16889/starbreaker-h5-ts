@@ -134,7 +134,8 @@ export class PlanetSystem {
     const drop = BLOCK[b.kind].drop;
     const sector = this.state.sector;
     const coins = Math.max(1, Math.round(drop * 4 * Math.pow(1.5, sector - 1) * this.state.coinMul()));
-    this.hooks.onDrop(b.x, b.y, 'coin', coins);
+    /* 每格都掉會讓畫面被幾百顆金幣淹掉（參考遊戲只看得到少量掉落）→ 60% 才掉，但金額提高 */
+    if (Math.random() < 0.6) this.hooks.onDrop(b.x, b.y, 'coin', Math.round(coins / 0.6));
     if (Math.random() < BLOCK[b.kind].gemChance + this.state.gemChance()) this.hooks.onDrop(b.x, b.y, 'gem', 1 + Math.floor(sector / 2));
     if (b.kind === 'core') this.hooks.onDrop(b.x, b.y, 'core', 3);
 
