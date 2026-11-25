@@ -13,6 +13,7 @@ let W = 390, H = 640, DPR = 1;
 let shake = 0;
 let last = performance.now();
 let fps = 60;
+let paused = false;   // 測試用：暫停模擬但仍持續繪製
 let fpsAcc = 0, fpsFrames = 0;
 let bgStars: { x: number; y: number; r: number; a: number }[] = [];
 
@@ -29,17 +30,19 @@ const planet = new PlanetSystem(state, {
 
 const combat = new Combat(state, planet);
 
-const ui = new UIManager(() => {
-  /* 補給站發放後刷新星球（武器/衛星變強要立刻反映） */
-  if (!planet.aliveCount()) nextPlanet();
-});
+const ui = new UIManager(() => rebuildWorld());
+
+/** 補給站／匯入存檔後：用目前星區重建世界 */
+function rebuildWorld(): void {
+  planet.build(state.sector, state.planet);
+  combat.reset();
+  ui.renderHud();
+}
 
 /* ---------------- 星球推進 ---------------- */
 function nextPlanet(): void {
   state.clearPlanet();
-  planet.build(state.sector, state.planet);
-  combat.reset();
-  ui.renderHud();
+  rebuildWorld();
 }
 
 /* ---------------- 尺寸 ---------------- */
@@ -86,8 +89,10 @@ function loop(now: number): void {
   fpsAcc += rawDt; fpsFrames++;
   if (fpsAcc >= 0.5) { fps = Math.round(fpsFrames / fpsAcc); fpsAcc = 0; fpsFrames = 0; }
 
-  combat.update(dt);
-  planet.tickVisuals(dt);
+  if (!paused) {
+    combat.update(dt);
+    planet.tickVisuals(dt);
+  }
   if (shake > 0) shake = Math.max(0, shake - dt * 40);
 
   draw();
@@ -223,6 +228,7 @@ declare global {
       ui: UIManager;
       nextPlanet: () => void;
       fps: () => number;
+      setPaused: (v: boolean) => void;
       blocks: () => Block[];
       planetMeta: typeof PLANET;
     };
@@ -238,9 +244,16 @@ window.__game = {
   ui,
   nextPlanet,
   fps: () => fps,
+  setPaused: (v) => { paused = v; },
   blocks: () => planet.blocks,
   planetMeta: PLANET,
 };
 
 boot();
 window.__game.ready = true;
+
+/* 分享連結：#save=<存檔碼> → 問使用者要不要載入（不自動覆蓋本機存檔） */
+if (location.hash.startsWith('#save=')) {
+  const code = decodeURIComponent(location.hash.slice(6));
+  setTimeout(() => ui.confirmImport(code), 400);
+}

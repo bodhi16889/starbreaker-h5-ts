@@ -2,7 +2,7 @@
 import { BUNDLES, PASS_TIERS, SAT, SATELLITES, VERSION, WEAPONS } from './config';
 import { fmt, gameState } from './GameState';
 
-type Tab = 'weapons' | 'sats' | 'skills' | 'pass' | 'bundles';
+type Tab = 'weapons' | 'sats' | 'skills' | 'pass' | 'bundles' | 'save';
 
 const TABS: { id: Tab; icon: string; label: string }[] = [
   { id: 'weapons', icon: '🔫', label: '武器' },
@@ -10,6 +10,7 @@ const TABS: { id: Tab; icon: string; label: string }[] = [
   { id: 'skills', icon: '🎲', label: '技能' },
   { id: 'pass', icon: '🎫', label: '通行證' },
   { id: 'bundles', icon: '🎁', label: '禮包' },
+  { id: 'save', icon: '💾', label: '存檔' },
 ];
 
 export class UIManager {
@@ -107,7 +108,8 @@ export class UIManager {
     else if (tab === 'sats') this.renderSats();
     else if (tab === 'skills') this.renderSkills();
     else if (tab === 'pass') this.renderPass();
-    else this.renderBundles();
+    else if (tab === 'bundles') this.renderBundles();
+    else this.renderSave();
   }
 
   private renderWeapons(): void {
@@ -218,6 +220,99 @@ export class UIManager {
     this.modal('特惠禮包', `<div class="hint">沙盒設計：所有禮包都是 <b style="color:#5cffa8">FREE</b>，點即發放。</div>${rows}`);
   }
 
+  /* ---------------- 存檔備份／跨裝置 ---------------- */
+  renderSave(): void {
+    const s = gameState;
+    const code = s.exportCode();
+    const when = s.lastSavedAt ? new Date(s.lastSavedAt).toLocaleString() : '—';
+    this.modal('存檔備份', `
+      <div class="stat-row">
+        <span class="stat">金幣 <b>${fmt(s.gold)}</b></span>
+        <span class="stat">星區 <b>${s.sector}-${s.planet}</b></span>
+        <span class="stat">擊破 <b>${fmt(s.stats.blocks)}</b></span>
+        <span class="stat">通關星球 <b>${s.stats.planets}</b></span>
+      </div>
+      <div class="hint">最近寫入：${when}（每次升級／領取都會自動存到這台裝置）</div>
+
+      <h3 style="font-size:13px;margin:10px 0 4px">① 存檔碼（貼到另一台裝置）</h3>
+      <textarea id="saveCode" readonly rows="4" style="width:100%;font-size:11px;background:#0a1220;color:#9fc0ff;border:1px solid #24395f;border-radius:8px;padding:8px;font-family:ui-monospace,monospace" >${code}</textarea>
+      <button class="btn wide primary" id="btnCopyCode">複製存檔碼</button>
+      <button class="btn wide" id="btnCopyLink">複製分享連結（開網址就問要不要載入）</button>
+      <button class="btn wide" id="btnDownloadSave">下載存檔檔（.json）</button>
+
+      <h3 style="font-size:13px;margin:14px 0 4px">② 匯入存檔碼</h3>
+      <textarea id="importCode" rows="3" placeholder="把 SB1.xxxx.yyyy 貼在這裡" style="width:100%;font-size:11px;background:#0a1220;color:#e8f1ff;border:1px solid #24395f;border-radius:8px;padding:8px;font-family:ui-monospace,monospace"></textarea>
+      <button class="btn wide gem" id="btnImportCode">匯入存檔碼</button>
+      <label class="btn wide" style="display:flex;align-items:center;justify-content:center;cursor:pointer">
+        匯入存檔檔（.json）<input id="importFile" type="file" accept=".json,application/json" style="display:none" />
+      </label>
+      <div id="importMsg" class="hint"></div>`);
+  }
+
+  private copyText(text: string, label: string): void {
+    const done = () => this.toast(label + ' 已複製');
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(() => this.fallbackCopy(text, done));
+    } else {
+      this.fallbackCopy(text, done);
+    }
+  }
+
+  private fallbackCopy(text: string, done: () => void): void {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); done(); } catch { this.toast('複製失敗，請長按選取'); }
+    ta.remove();
+  }
+
+  private afterImport(res: { ok: boolean; msg: string }): void {
+    const el = this.modalEl.querySelector('#importMsg') as HTMLElement | null;
+    if (el) {
+      el.textContent = (res.ok ? '✔ ' : '✕ ') + res.msg;
+      el.style.color = res.ok ? '#5cffa8' : '#ff8a8a';
+    }
+    if (res.ok) {
+      this.onRefresh();
+      this.renderHud();
+      this.toast(res.msg);
+      setTimeout(() => this.renderSave(), 400);
+    } else {
+      this.toast(res.msg);
+    }
+  }
+
+  /** 分享連結載入確認（不自動覆蓋本機存檔） */
+  confirmImport(code: string): void {
+    const prev = gameState.previewCode(code);
+    if (!prev.ok || !prev.info) {
+      this.toast('連結裡的存檔碼無效：' + prev.msg);
+      return;
+    }
+    const i = prev.info;
+    const when = i.ts ? new Date(i.ts).toLocaleString() : '未知';
+    this.modal('偵測到分享的存檔', `
+      <div class="hint">這個網址帶有另一台裝置的存檔，載入會覆蓋本機進度。</div>
+      <div class="stat-row">
+        <span class="stat">星區 <b>${i.sector}-${i.planet}</b></span>
+        <span class="stat">擊破 <b>${fmt(i.blocks)}</b></span>
+        <span class="stat">金幣 <b>${fmt(i.gold)}</b></span>
+      </div>
+      <div class="hint">存檔時間：${when}</div>
+      <button class="btn wide primary" data-import-now="1">載入這個存檔</button>
+      <button class="btn wide" data-import-cancel="1">先不要（保留本機進度）</button>`);
+    (this.modalEl.querySelector('[data-import-now]') as HTMLElement | null)?.addEventListener('click', () => {
+      this.afterImport(gameState.importCode(code));
+    });
+    (this.modalEl.querySelector('[data-import-cancel]') as HTMLElement | null)?.addEventListener('click', () => {
+      history.replaceState(null, '', location.pathname + location.search);
+      this.closeModal();
+    });
+  }
+
   /* ---------------- 補給站 ---------------- */
   openSupply(): void {
     this.modal('⚡ 指揮官無限補給站', `
@@ -242,6 +337,7 @@ export class UIManager {
       </div>
       <div class="hint">星區 ${s.sector}-${s.planet} ｜ 已擊破 ${fmt(s.stats.blocks)} ｜ 通關星球 ${s.stats.planets}</div>
       <div class="hint">線上版本檔：<a href="version.json" target="_blank" rel="noopener" style="color:#5cffa8">version.json</a></div>
+      <div class="hint">換裝置：開「存檔」分頁 → 複製存檔碼或分享連結，在另一台匯入即可。</div>
       <div class="hint">要確認線上是不是最新版：重新整理後看右下角徽章，或開 version.json。</div>`);
   }
 
@@ -298,6 +394,22 @@ export class UIManager {
     });
     byId('btnSatAll')?.addEventListener('click', () => {
       s.supply('satellites'); this.renderSats();
+    });
+
+    byId('btnCopyCode')?.addEventListener('click', () => this.copyText(s.exportCode(), '存檔碼'));
+    byId('btnCopyLink')?.addEventListener('click', () => this.copyText(s.shareUrl(), '分享連結'));
+    byId('btnDownloadSave')?.addEventListener('click', () => { s.downloadSave(); this.toast('已下載存檔檔'); });
+    byId('btnImportCode')?.addEventListener('click', () => {
+      const ta = body.querySelector('#importCode') as HTMLTextAreaElement | null;
+      this.afterImport(s.importCode(ta?.value ?? ''));
+    });
+    const fileInput = body.querySelector('#importFile') as HTMLInputElement | null;
+    fileInput?.addEventListener('change', async () => {
+      const f = fileInput.files?.[0];
+      if (!f) return;
+      const text = await f.text();
+      this.afterImport(s.importFileText(text));
+      fileInput.value = '';
     });
   }
 }

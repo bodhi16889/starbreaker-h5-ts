@@ -33,6 +33,32 @@ export function fmt(n: number): string {
   return (n / Math.pow(1000, tier)).toFixed(2) + SUFFIX[tier];
 }
 
+function b64encode(str: string): string {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function b64decode(b64: string): string {
+  const norm = b64.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = norm + '==='.slice((norm.length + 3) % 4);
+  const bin = atob(pad);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+/** 簡單校驗碼（FNV-1a 32bit），避免貼到截斷的存檔碼還原成壞檔 */
+function fnv1a(str: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+}
+
 function num(v: unknown, def = 0): number {
   const n = Number(v);
   return isFinite(n) ? n : def;
@@ -55,6 +81,7 @@ export class GameState {
 
   stats = { blocks: 0, planets: 0, bestSector: 1 };
   overdriveUntil = 0;
+  lastSavedAt = 0;
 
   private listeners = new Set<() => void>();
 
@@ -77,14 +104,103 @@ export class GameState {
   emit(): void { this.listeners.forEach((f) => f()); }
 
   /* ---------- 存檔 ---------- */
-  save(): void {
-    const data: SaveData = {
+  toSaveData(): SaveData {
+    return {
       v: SAVE_VERSION, gold: this.gold, gems: this.gems, prestige: this.prestige, cores: this.cores,
       sector: this.sector, planet: this.planet, weapons: this.weapons, satellites: this.satellites,
       gear: this.gear, skills: this.skills, passClaimed: this.passClaimed, bundles: this.bundles,
       stats: this.stats, overdriveUntil: 0,
     };
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch { /* 私密模式 */ }
+  }
+
+  save(): void {
+    this.lastSavedAt = Date.now();
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.toSaveData())); } catch { /* 私密模式 */ }
+  }
+
+  /* ---------- 存檔匯出／匯入（跨裝置） ---------- */
+  /** 存檔碼：SB1.<base64url>.<8碼校驗> — 貼到另一台裝置的「匯入」就能接手 */
+  exportCode(): string {
+    const payload = JSON.stringify({ ts: Date.now(), d: this.toSaveData() });
+    const b64 = b64encode(payload);
+    return 'SB1.' + b64 + '.' + fnv1a(payload).toString(16).padStart(8, '0');
+  }
+
+  private decodeCode(code: string): { ok: true; ts: number; d: Partial<SaveData> } | { ok: false; msg: string } {
+    const raw = (code || '').trim().replace(/\s+/g, '');
+    if (!raw) return { ok: false, msg: '請先貼上存檔碼' };
+    const parts = raw.split('.');
+    if (parts.length !== 3 || parts[0] !== 'SB1') return { ok: false, msg: '存檔碼格式不對（要 SB1.xxx.yyyy）' };
+
+    let payload: string;
+    try { payload = b64decode(parts[1]); } catch { return { ok: false, msg: '存檔碼解不開（可能被截斷）' }; }
+    if (fnv1a(payload).toString(16).padStart(8, '0') !== parts[2]) return { ok: false, msg: '存檔碼校驗失敗（複製不完整）' };
+
+    let parsed: { ts?: number; d?: Partial<SaveData> };
+    try { parsed = JSON.parse(payload) as { ts?: number; d?: Partial<SaveData> }; } catch { return { ok: false, msg: '存檔內容不是 JSON' }; }
+    const d = parsed.d;
+    if (!d || typeof d !== 'object') return { ok: false, msg: '存檔內容缺少資料' };
+    if (num(d.v, 0) > SAVE_VERSION) return { ok: false, msg: `存檔版本較新（v${d.v}），請重新整理更新遊戲` };
+    return { ok: true, ts: num(parsed.ts, 0), d };
+  }
+
+  /** 只讀預覽（不覆蓋本機），給「分享連結」的確認視窗用 */
+  previewCode(code: string): { ok: boolean; msg: string; info?: { sector: number; planet: number; blocks: number; gold: number; ts: number } } {
+    const r = this.decodeCode(code);
+    if (!r.ok) return { ok: false, msg: r.msg };
+    return {
+      ok: true,
+      msg: 'ok',
+      info: {
+        sector: Math.max(1, num(r.d.sector, 1)),
+        planet: Math.max(1, num(r.d.planet, 1)),
+        blocks: num(r.d.stats?.blocks, 0),
+        gold: num(r.d.gold, 0),
+        ts: r.ts,
+      },
+    };
+  }
+
+  importCode(code: string): { ok: boolean; msg: string } {
+    const r = this.decodeCode(code);
+    if (!r.ok) return { ok: false, msg: r.msg };
+    this.resetFields();
+    this.applySaveData(r.d);
+    this.save();
+    this.emit();
+    return { ok: true, msg: `已載入：星區 ${this.sector}-${this.planet} · 擊破 ${this.stats.blocks}` };
+  }
+
+  /** 存檔碼可以直接塞進網址分享：<url>#save=<code> */
+  shareUrl(): string {
+    const base = location.origin + location.pathname;
+    return `${base}#save=${encodeURIComponent(this.exportCode())}`;
+  }
+
+  /** 下載成檔案（給檔案 App／雲端硬碟搬運用） */
+  downloadSave(): void {
+    const payload = JSON.stringify({ name: 'StarBreaker: Unlimited Drill', ts: Date.now(), d: this.toSaveData() }, null, 2);
+    const blob = new Blob([payload], { type: 'application/json' });
+    const a = document.createElement('a');
+    const ts = new Date();
+    const stamp = `${ts.getFullYear()}${String(ts.getMonth() + 1).padStart(2, '0')}${String(ts.getDate()).padStart(2, '0')}-${String(ts.getHours()).padStart(2, '0')}${String(ts.getMinutes()).padStart(2, '0')}`;
+    a.href = URL.createObjectURL(blob);
+    a.download = `starbreaker-save-${stamp}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+
+  /** 匯入 .json 檔（下載的存檔檔可直接讀） */
+  importFileText(text: string): { ok: boolean; msg: string } {
+    let parsed: { d?: Partial<SaveData> } | Partial<SaveData>;
+    try { parsed = JSON.parse(text) as { d?: Partial<SaveData> } | Partial<SaveData>; } catch { return { ok: false, msg: '檔案不是 JSON' }; }
+    const d = (parsed as { d?: Partial<SaveData> }).d ?? (parsed as Partial<SaveData>);
+    if (!d || typeof d !== 'object' || num(d.v, 0) === 0) return { ok: false, msg: '檔案裡沒有存檔資料' };
+    this.resetFields();
+    this.applySaveData(d);
+    this.save();
+    this.emit();
+    return { ok: true, msg: `已載入：星區 ${this.sector}-${this.planet} · 擊破 ${this.stats.blocks}` };
   }
 
   load(): void {
@@ -94,7 +210,10 @@ export class GameState {
     let d: Partial<SaveData>;
     try { d = JSON.parse(raw) as Partial<SaveData>; } catch { return; }
     if (!d || typeof d !== 'object') return;
+    this.applySaveData(d);
+  }
 
+  private applySaveData(d: Partial<SaveData>): void {
     this.gold = num(d.gold, this.gold);
     this.gems = num(d.gems, this.gems);
     this.prestige = num(d.prestige, this.prestige);
@@ -113,6 +232,13 @@ export class GameState {
     this.bundles = {};
     Object.entries(d.bundles ?? {}).forEach(([k, v]) => { if (v) this.bundles[k] = true; });
     if (d.stats) this.stats = { blocks: num(d.stats.blocks), planets: num(d.stats.planets), bestSector: Math.max(1, num(d.stats.bestSector, 1)) };
+  }
+
+  private resetFields(): void {
+    this.skills = {}; this.passClaimed = {}; this.bundles = {};
+    WEAPONS.forEach((w) => { this.weapons[w.id] = 0; });
+    SATELLITES.forEach((s) => { this.satellites[s.id] = 0; });
+    GEAR.forEach((g) => { this.gear[g.id] = 1; });
   }
 
   reset(): void {

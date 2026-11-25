@@ -71,7 +71,7 @@ def main():
 
         # 五個分頁
         tabs = p.eval_on_selector_all("#tabs button", "els => els.map(e => e.dataset.tab)")
-        ok("五個分頁", tabs == ["weapons", "sats", "skills", "pass", "bundles"], str(tabs))
+        ok("分頁（含存檔共六個）", tabs == ["weapons", "sats", "skills", "pass", "bundles", "save"], str(tabs))
 
         # 武器 +1 / +10
         p.evaluate("__game.state.gold = 1e9; __game.state.emit()")
