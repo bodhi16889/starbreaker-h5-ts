@@ -107,8 +107,7 @@ function loop(now: number): void {
     combat.update(dt);
     planet.tickVisuals(dt);
   }
-  ui.aliveBlocks = planet.aliveCount();
-  ui.totalBlocks = planet.blocks.length;
+  ui.setBlockCount(planet.aliveCount(), planet.blocks.length);
   if (shake > 0) shake = Math.max(0, shake - dt * 40);
 
   draw();

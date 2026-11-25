@@ -122,6 +122,19 @@ export class UIManager {
 
   aliveBlocks = 0;
   totalBlocks = 0;
+  private lastBlockText = '';
+
+  /** 每幀更新星球進度（HUD 只會在 state.emit 時整頁重繪，方塊數會來不及） */
+  setBlockCount(alive: number, total: number): void {
+    this.aliveBlocks = alive;
+    this.totalBlocks = total;
+    const txt = `${alive}/${fmt(total)}`;
+    if (txt === this.lastBlockText) return;
+    this.lastBlockText = txt;
+    const el = document.querySelector('#hBlocks');
+    if (el) el.textContent = txt;
+    this.drawThumb();
+  }
 
   private renderBottom(): void {
     const s = gameState;
