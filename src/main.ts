@@ -128,10 +128,10 @@ function draw(): void {
   ctx.globalAlpha = 1;
 
   const cx = W / 2 + (Math.random() - 0.5) * shake;
-  const cy = H * 0.42 + (Math.random() - 0.5) * shake;
-  /* 對照 Auto Drill: Galaxy：星球要撐滿畫面寬度，衛星貼在最外圈 */
-  const worldRadius = planet.radius + 74 + 52;
-  const scale = Math.min(1.15, (Math.min(W * 0.98, H * 0.92)) / (worldRadius * 2));
+  const cy = H * 0.45 + (Math.random() - 0.5) * shake;
+  /* 對照 Auto Drill: Galaxy：星球要盡量撐滿寬度，飛船貼邊、衛星在最外圈 */
+  const worldRadius = planet.radius * 1.14;
+  const scale = Math.min(1.35, (Math.min(W * 0.97, H * 0.95)) / (worldRadius * 2));
 
   /* 星球外環 */
   ctx.save();
@@ -148,6 +148,11 @@ function draw(): void {
   ctx.setLineDash([]);
 
   ctx.scale(scale, scale);
+  /* 左側圖示列 62px、右側 20px、上方 84px、下方 12px 不讓飛船/衛星跑進去 */
+  combat.bounds = {
+    minX: (62 - cx) / scale, maxX: (W - 20 - cx) / scale,
+    minY: (84 - cy) / scale, maxY: (H - 12 - cy) / scale,
+  };
   drawBlocks();
   combat.render(ctx, 0, 0, scale);
   ctx.restore();

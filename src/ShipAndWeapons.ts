@@ -25,7 +25,7 @@ interface Fx {
 }
 
 const FLOATER_MAX = 8;    // 對照參考遊戲：畫面上只留少量跳字，超過就併進現有數字
-const ORBIT_DIST = 74;
+const ORBIT_DIST = 34;   // 貼著星球邊緣繞，畫面才裝得下大星球
 
 export class Combat {
   ship: Vec = { x: 0, y: 0 };
@@ -118,8 +118,8 @@ export class Combat {
         this.ship.y += (j.y / Math.max(mag, 1)) * v * dt;
         /* 限制在軌道環附近，避免飛出畫面 */
         const d = Math.hypot(this.ship.x, this.ship.y);
-        const minD = this.planet.radius + 18;
-        const maxD = this.planet.radius + 190;
+        const minD = this.planet.radius * 0.5;
+        const maxD = this.planet.radius + 150;
         if (d < minD) { const k = minD / (d || 1); this.ship.x *= k; this.ship.y *= k; }
         if (d > maxD) { const k = maxD / d; this.ship.x *= k; this.ship.y *= k; }
       }
@@ -129,9 +129,11 @@ export class Combat {
         if (this.releaseTimer <= 0) { this.manual = false; this.pointerId = null; }
       }
       this.angle += dt * 0.85 * speedMul;
-      const r = this.planet.radius + ORBIT_DIST;
+      /* 貼著星球邊緣（不是星球外圈）→ 星球才能放大到接近滿版 */
+      const r = this.planet.radius * 0.94 + ORBIT_DIST * 0.4;
       this.ship.x = Math.cos(this.angle) * r;
       this.ship.y = Math.sin(this.angle) * r;
+      this.clampToBounds(this.ship);
     }
   }
 
@@ -352,6 +354,15 @@ export class Combat {
   }
 
   beamSeg: { x1: number; y1: number; x2: number; y2: number; width: number } | null = null;
+  /** 可視範圍（世界座標）。飛船與衛星夾在裡面，避免躲到左側圖示列底下 */
+  bounds: { minX: number; maxX: number; minY: number; maxY: number } | null = null;
+
+  private clampToBounds(p: { x: number; y: number }): void {
+    const b = this.bounds;
+    if (!b) return;
+    p.x = Math.min(b.maxX, Math.max(b.minX, p.x));
+    p.y = Math.min(b.maxY, Math.max(b.minY, p.y));
+  }
 
   private distToSeg(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
     const dx = x2 - x1, dy = y2 - y1;
@@ -531,8 +542,9 @@ export class Combat {
     SATELLITES.forEach((s) => {
       const lv = this.state.satLevel(s.id);
       if (lv <= 0) return;
-      const x = Math.cos(this.satAngle[s.id]) * s.radius;
-      const y = Math.sin(this.satAngle[s.id]) * s.radius;
+      const sp = { x: Math.cos(this.satAngle[s.id]) * s.radius, y: Math.sin(this.satAngle[s.id]) * s.radius };
+      this.clampToBounds(sp);
+      const x = sp.x, y = sp.y;
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(this.satSpin);

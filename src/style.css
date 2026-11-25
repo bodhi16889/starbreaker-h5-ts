@@ -105,7 +105,7 @@ html, body {
 .wcard .wname span { font-size: 10px; color: #8fa9cf; font-weight: 400; margin-left: 6px; }
 .wcard .wdps { font-size: 11px; color: #7fd2ff; }
 .wbuy {
-  min-width: 76px; min-height: 40px; border-radius: 8px;
+  min-width: 76px; min-height: 44px; border-radius: 8px;
   background: rgba(20, 34, 58, .95); border: 1px solid #3d6394; color: #eaf6ff;
   font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1;
@@ -118,6 +118,18 @@ html, body {
   color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .4px; cursor: pointer;
 }
 .unlock:disabled { opacity: .5; }
+
+/* 矮螢幕（手機橫向 / 640×480 iframe）：收掉卡片，把高度留給星球 */
+@media (max-height: 640px) {
+  .slot { height: 44px; }
+  .wcard { padding: 4px 8px; }
+  .wcard .wdps { display: none; }
+  .unlock { min-height: 40px; font-size: 11px; }
+}
+@media (max-height: 520px) {
+  .wcards { display: none; }
+  .bottom { padding: 4px 6px 6px; gap: 4px; }
+}
 
 /* ---------- 彈窗 ---------- */
 .modal { position: fixed; inset: 0; z-index: 30; display: flex; align-items: flex-end; justify-content: center; background: rgba(2, 4, 10, .74); }

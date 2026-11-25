@@ -1,6 +1,6 @@
 /* config.ts — 全部平衡參數集中在這裡（其他檔案不得硬編碼數字） */
 
-export const VERSION = '1.2.0';
+export const VERSION = '1.2.1';
 
 export interface WeaponDef {
   id: string; name: string; color: string;
@@ -75,12 +75,12 @@ export const WEAPONS: WeaponDef[] = [
 ];
 
 export const SATELLITES = [
-  { id: 'collector', name: '採集衛星', color: '#33f28c', radius: 62, speed: 2.4, desc: '定期抽取金幣與寶石' },
-  { id: 'bomber', name: '爆破衛星', color: '#ff6626', radius: 76, speed: 1.8, desc: '定期投擲高爆核彈' },
-  { id: 'beam', name: '雷射衛星', color: '#26d9ff', radius: 84, speed: 2.1, desc: '連線切割沿途方塊' },
-  { id: 'mirror', name: '複製衛星', color: '#d959ff', radius: 70, speed: -2.2, desc: '複製主武器彈幕' },
-  { id: 'crit', name: '暴擊衛星', color: '#ffd933', radius: 94, speed: 1.5, desc: '暴擊率、暴擊傷害' },
-  { id: 'chrono', name: '時空衛星', color: '#8cbfff', radius: 94, speed: -1.5, desc: '週期性攻速爆發' },
+  { id: 'collector', name: '採集衛星', color: '#33f28c', radius: 30, speed: 2.4, desc: '定期抽取金幣與寶石' },
+  { id: 'bomber', name: '爆破衛星', color: '#ff6626', radius: 38, speed: 1.8, desc: '定期投擲高爆核彈' },
+  { id: 'beam', name: '雷射衛星', color: '#26d9ff', radius: 42, speed: 2.1, desc: '連線切割沿途方塊' },
+  { id: 'mirror', name: '複製衛星', color: '#d959ff', radius: 34, speed: -2.2, desc: '複製主武器彈幕' },
+  { id: 'crit', name: '暴擊衛星', color: '#ffd933', radius: 47, speed: 1.5, desc: '暴擊率、暴擊傷害' },
+  { id: 'chrono', name: '時空衛星', color: '#8cbfff', radius: 47, speed: -1.5, desc: '週期性攻速爆發' },
 ];
 
 export const SAT = {
@@ -88,7 +88,7 @@ export const SAT = {
   dmgGrow: 1.24,
   sectorGrow: 1.35,
   collector: { interval: 1.5, minInterval: 0.35, perLv: 0.02, gold: 25, gemChance: 0.25 },
-  bomber: { interval: 1.8, minInterval: 0.45, perLv: 0.025, radius: 84, dmgMult: 12 },
+  bomber: { interval: 1.8, minInterval: 0.45, perLv: 0.025, radius: 42, dmgMult: 12 },
   mirror: { interval: 0.28, ratioBase: 0.5, ratioPerLv: 0.01, dmgMult: 2.2 },
   beam: { tick: 0.1, width: 26, dmgMult: 3 },
   ring: { interval: 4, radius: 36 },
