@@ -135,8 +135,27 @@ export class Combat {
     }
   }
 
+  /** nearest = 最近（預設）；weakest = 血最少（補刀）；richest = 黃金／核心優先（賺資源） */
+  targetMode: 'nearest' | 'weakest' | 'richest' = 'nearest';
+  setTargetMode(m: 'nearest' | 'weakest' | 'richest'): void { this.targetMode = m; }
+
   private updateTarget(): void {
-    this.target = this.planet.nearest(this.ship.x, this.ship.y, 1e9);
+    const alive = this.planet.alive();
+    if (!alive.length) { this.target = null; return; }
+    if (this.targetMode === 'nearest') {
+      this.target = this.planet.nearest(this.ship.x, this.ship.y, 1e9);
+      return;
+    }
+    let best = alive[0];
+    let bestScore = -Infinity;
+    for (const b of alive) {
+      const d = Math.hypot(b.x - this.ship.x, b.y - this.ship.y);
+      const score = this.targetMode === 'weakest'
+        ? -b.hp - d * 0.02
+        : (b.kind === 'core' ? 3 : b.kind === 'gold' ? 2 : b.kind === 'energy' ? 1.2 : 1) * 1000 - d;
+      if (score > bestScore) { bestScore = score; best = b; }
+    }
+    this.target = best;
   }
 
   /* ---------------- 武器 ---------------- */

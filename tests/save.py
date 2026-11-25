@@ -58,7 +58,8 @@ def main():
         pA.on("pageerror", lambda e: errs.append(str(e)[:200]))
         boot(pA)
 
-        ok("有『存檔』分頁", pA.eval_on_selector_all("#tabs button", "els=>els.map(e=>e.dataset.tab)")[-1] == "save")
+        ok("左側有『存檔』圖示",
+           pA.eval_on_selector_all(".rail button", "els=>els.map(e=>e.dataset.tab)")[-1] == "save")
 
         # 造一個可辨識的進度
         pA.evaluate("""(() => { const s = __game.state;
@@ -75,7 +76,7 @@ def main():
         ok("匯出存檔碼格式 SB1.<base64>.<8碼>", code.startswith("SB1.") and len(code.split(".")) == 3,
            f"len={len(code)}")
         ok("存檔碼長度合理（<2000 字）", len(code) < 2000, str(len(code)))
-        ok("存檔分頁有複製／下載／匯入按鈕",
+        ok("存檔頁有複製／下載／匯入按鈕",
            all(pA.eval_on_selector(sel, "e=>!!e") for sel in ["#btnCopyCode", "#btnDownloadSave", "#btnImportCode", "#importCode"]))
         ok("存檔碼可貼回驗證（校驗碼正確）",
            pA.evaluate("(c) => __game.state.previewCode(c).ok", code) is True)

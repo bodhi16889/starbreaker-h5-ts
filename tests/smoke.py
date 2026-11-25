@@ -69,18 +69,26 @@ def main():
         ok("金幣有進帳", after["gold"] > gold0, f"{gold0} → {after['gold']}")
         ok("FPS ≥ 30", after["fps"] >= 30, f"{after['fps']} fps")
 
-        # 五個分頁
-        tabs = p.eval_on_selector_all("#tabs button", "els => els.map(e => e.dataset.tab)")
-        ok("分頁（含存檔共六個）", tabs == ["weapons", "sats", "skills", "pass", "bundles", "save"], str(tabs))
+        # 左側圖示列（對齊 Auto Drill: Galaxy）
+        rail = p.eval_on_selector_all(".rail button", "els => els.map(e => e.dataset.tab)")
+        ok("左側六個圖示（設定/衛星/技能/通行證/禮包/存檔）",
+           rail == ["settings", "sats", "skills", "pass", "bundles", "save"], str(rail))
+        ok("底部裝備列 7 格（加速 + 3 武器 + 3 技能）",
+           p.eval_on_selector_all(".slot", "els => els.length") == 7)
+        ok("頂部顯示 CR / 倍率 / 星球進度",
+           all(p.eval_on_selector(s, "e=>!!e.textContent") for s in ["#hCredits", "#hMult", "#hBlocks"]))
 
-        # 武器 +1 / +10
+        # 武器 +1 / +10（武器清單從底部卡片或 openTab 進）
         p.evaluate("__game.state.gold = 1e9; __game.state.emit()")
         p.evaluate("__game.ui.openTab('weapons')")
         time.sleep(0.4)
-        ok("每把武器有 +1 與 +10", p.eval_on_selector_all("[data-upw]", "e=>e.length") == 10
-           and p.eval_on_selector_all("[data-upw10]", "e=>e.length") == 10)
+        unlocked = p.evaluate("Object.values(__game.state.weapons).filter(v=>v>0).length")
+        ok("已解鎖的武器都有 +1 與 +10",
+           p.eval_on_selector_all("#mBody [data-upw]", "e=>e.length") == unlocked
+           and p.eval_on_selector_all("#mBody [data-upw10]", "e=>e.length") == unlocked,
+           f"unlocked={unlocked}")
         lv0 = p.evaluate("__game.state.weaponLevel('gatling')")
-        p.click('[data-upw10="gatling"]')
+        p.click('#mBody [data-upw10="gatling"]')
         time.sleep(0.3)
         lv1 = p.evaluate("__game.state.weaponLevel('gatling')")
         ok("連升 +10 加 10 級", lv1 - lv0 == 10, f"{lv0} → {lv1}")
@@ -96,6 +104,8 @@ def main():
         # 補給站（五項）
         p.evaluate("__game.ui.closeModal()")
         time.sleep(0.2)
+        p.evaluate("__game.ui.openTab('settings')")
+        time.sleep(0.3)
         p.click("#btnSupply")
         time.sleep(0.4)
         kinds = p.eval_on_selector_all("[data-sup]", "els=>els.map(e=>e.dataset.sup)")

@@ -1,7 +1,7 @@
 /* main.ts — 遊戲主迴圈、Canvas 2D 渲染、輸入與開機 */
 import './style.css';
 import { BALANCE, BLOCK, PLANET, VERSION } from './config';
-import { fmt, gameState } from './GameState';
+import { gameState } from './GameState';
 import { PlanetSystem, type Block } from './PlanetSystem';
 import { Combat } from './ShipAndWeapons';
 import { UIManager } from './UIManager';
@@ -30,7 +30,21 @@ const planet = new PlanetSystem(state, {
 
 const combat = new Combat(state, planet);
 
-const ui = new UIManager(() => rebuildWorld());
+const AIM_MODES: { key: 'nearest' | 'weakest' | 'richest'; label: string }[] = [
+  { key: 'nearest', label: '最近' },
+  { key: 'weakest', label: '補刀' },
+  { key: 'richest', label: '肥羊' },
+];
+let aimIdx = 0;
+
+const ui = new UIManager(
+  () => rebuildWorld(),
+  () => {
+    aimIdx = (aimIdx + 1) % AIM_MODES.length;
+    combat.setTargetMode(AIM_MODES[aimIdx].key);
+    return AIM_MODES[aimIdx].label;
+  },
+);
 
 /** 補給站／匯入存檔後：用目前星區重建世界 */
 function rebuildWorld(): void {
@@ -93,6 +107,8 @@ function loop(now: number): void {
     combat.update(dt);
     planet.tickVisuals(dt);
   }
+  ui.aliveBlocks = planet.aliveCount();
+  ui.totalBlocks = planet.blocks.length;
   if (shake > 0) shake = Math.max(0, shake - dt * 40);
 
   draw();
@@ -113,10 +129,10 @@ function draw(): void {
   ctx.globalAlpha = 1;
 
   const cx = W / 2 + (Math.random() - 0.5) * shake;
-  const cy = H * 0.47 + (Math.random() - 0.5) * shake;
-  /* 星球 + 飛船軌道 + 最外圈衛星都要在同一個縮放下才進得了畫面 */
-  const worldRadius = planet.radius + 74 + 100;
-  const scale = Math.min(1, (Math.min(W, H) * 0.94) / (worldRadius * 2));
+  const cy = H * 0.42 + (Math.random() - 0.5) * shake;
+  /* 對照 Auto Drill: Galaxy：星球要撐滿畫面寬度，衛星貼在最外圈 */
+  const worldRadius = planet.radius + 74 + 52;
+  const scale = Math.min(1.15, (Math.min(W * 0.98, H * 0.92)) / (worldRadius * 2));
 
   /* 星球外環 */
   ctx.save();
@@ -138,10 +154,10 @@ function draw(): void {
   ctx.restore();
 
   /* 左上角資訊 */
-  ctx.fillStyle = 'rgba(180, 210, 255, .5)';
-  ctx.font = '11px system-ui, sans-serif';
+  ctx.fillStyle = 'rgba(140, 170, 210, .4)';
+  ctx.font = '10px system-ui, sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText(`${fmt(state.gold)} coins · ${planet.aliveCount()} blocks · ${fps} fps`, 10, 16);
+  ctx.fillText(`${fps} fps`, 10, H - 10);
 
   if (state.overdriveUntil > performance.now()) {
     ctx.fillStyle = 'rgba(92, 255, 168, .9)';

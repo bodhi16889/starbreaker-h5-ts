@@ -114,7 +114,7 @@ export class PlanetSystem {
     b.hp -= dmg;
     b.flash = 0.12;
     if (!opts?.silent) {
-      this.hooks.onFloater(b.x, b.y, (crit ? '✷' : '') + this.fmt(dmg), crit ? '#ffd166' : '#dff1ff');
+      this.hooks.onFloater(b.x, b.y, (crit ? '✷' : '') + this.fmt(dmg) + ' CR', crit ? '#ffd166' : '#eaf6ff');
     }
     if (b.hp <= 0) this.kill(b);
     return dmg;
