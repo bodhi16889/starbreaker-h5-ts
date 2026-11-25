@@ -433,7 +433,13 @@ export class Combat {
     }
     let f = this.floaters.find((q) => !q.alive);
     if (!f) { f = { alive: false, x: 0, y: 0, text: '', color: '', life: 0 }; this.floaters.push(f); }
-    Object.assign(f, { alive: true, x, y, text, color, life: 0.85 });
+    /* 方塊只有 14~27px，跳字全部疊在同一個點會變成一團字 → 加隨機位移 */
+    Object.assign(f, {
+      alive: true,
+      x: x + (Math.random() - 0.5) * 22,
+      y: y + (Math.random() - 0.5) * 14,
+      text, color, life: 0.8,
+    });
   }
 
   private updateFloaters(dt: number): void {
@@ -565,7 +571,7 @@ export class Combat {
       if (!f.alive) return;
       ctx.globalAlpha = Math.max(0, Math.min(1, f.life / 0.6));
       ctx.fillStyle = f.color;
-      ctx.font = 'bold 11px system-ui, sans-serif';
+      ctx.font = 'bold 10px system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(f.text, f.x, f.y);
     });
