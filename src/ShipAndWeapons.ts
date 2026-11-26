@@ -1,6 +1,6 @@
 /* ShipAndWeapons.ts — 飛船自動巡航／虛擬搖桿、10 種武器、6 顆衛星、彈幕與掉落 */
 import { BALANCE, SATELLITES, SAT, WEAPONS, WeaponDef } from './config';
-import type { GameState } from './GameState';
+import { fmt, type GameState } from './GameState';
 import type { PlanetSystem, Block } from './PlanetSystem';
 
 export interface Vec { x: number; y: number }
@@ -16,7 +16,7 @@ interface Drop {
   kind: 'coin' | 'gem' | 'core'; value: number; life: number;
 }
 
-interface Floater { alive: boolean; x: number; y: number; text: string; color: string; life: number }
+interface Floater { alive: boolean; x: number; y: number; text: string; color: string; life: number; val: number }
 
 interface Fx {
   alive: boolean; kind: 'ring' | 'ringFixed' | 'line';
@@ -304,7 +304,7 @@ export class Combat {
           const bonus = Math.round(SAT.collector.gold * lv * this.state.planet * this.state.prestigeMult);
           this.state.gold += bonus;
           this.state.emit();
-          this.floater(p.x, p.y, '+' + bonus, s.color);
+          this.floater(p.x, p.y, '+' + fmt(bonus), s.color, bonus);
           this.line(p.x, p.y, t.x, t.y, s.color, 0.12, 2);
           if (Math.random() < SAT.collector.gemChance) this.state.gems += 1 + Math.floor(lv / 3);
           break;
@@ -452,23 +452,25 @@ export class Combat {
   }
 
   /* ---------------- 跳字與特效 ---------------- */
-  floater(x: number, y: number, text: string, color: string): void {
+  floater(x: number, y: number, text: string, color: string, val = 0): void {
     const alive = this.floaters.filter((f) => f.alive);
     if (alive.length >= FLOATER_MAX) {
+      /* 合併時用數值欄位相加，不要 parse 顯示字串（字串現在帶 K/M/B 後綴，parse 會得到 1.2 這種錯值） */
       const f0 = alive[(Math.random() * alive.length) | 0];
-      const n0 = parseFloat(f0.text.replace(/[^\d.]/g, ''));
-      const n1 = parseFloat(text.replace(/[^\d.]/g, ''));
-      if (isFinite(n0) && isFinite(n1)) f0.text = '✷+' + Math.round(n0 + n1).toLocaleString('en-US');
+      if (f0.val > 0 && val > 0) {
+        f0.val += val;
+        f0.text = '✷+' + fmt(f0.val);
+      }
       return;
     }
     let f = this.floaters.find((q) => !q.alive);
-    if (!f) { f = { alive: false, x: 0, y: 0, text: '', color: '', life: 0 }; this.floaters.push(f); }
+    if (!f) { f = { alive: false, x: 0, y: 0, text: '', color: '', life: 0, val: 0 }; this.floaters.push(f); }
     /* 方塊只有 14~27px，跳字全部疊在同一個點會變成一團字 → 加隨機位移 */
     Object.assign(f, {
       alive: true,
       x: x + (Math.random() - 0.5) * 22,
       y: y + (Math.random() - 0.5) * 14,
-      text, color, life: 0.55,
+      text, color, life: 0.55, val,
     });
   }
 

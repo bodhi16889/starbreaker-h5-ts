@@ -233,7 +233,11 @@ export class GameState {
     this.cores = num(d.cores, this.cores);
     this.sector = Math.max(1, num(d.sector, 1));
     this.planet = Math.max(1, num(d.planet, 1));
-    WEAPONS.forEach((w) => { this.weapons[w.id] = Math.max(0, num(d.weapons?.[w.id], this.weapons[w.id] ?? 0)); });
+    /* 舊存檔可能超過上限（v1.3.2 前沒封頂）→ 夾回 WEAPON_MAX，避免成本／DPS 無限膨脹 */
+    WEAPONS.forEach((w) => {
+      this.weapons[w.id] = Math.min(GameState.WEAPON_MAX,
+        Math.max(0, num(d.weapons?.[w.id], this.weapons[w.id] ?? 0)));
+    });
     SATELLITES.forEach((s) => { this.satellites[s.id] = Math.min(SAT.maxLevel, Math.max(0, num(d.satellites?.[s.id], this.satellites[s.id] ?? 0))); });
     GEAR.forEach((g) => { this.gear[g.id] = Math.max(1, num(d.gear?.[g.id], 1)); });
     this.skills = {};
@@ -333,6 +337,18 @@ export class GameState {
   /* ---------- 成本與升級 ---------- */
   weaponCost(id: string): number { return Math.round(40 * Math.pow(1.32, this.weaponLevel(id))); }
   static readonly WEAPON_MAX = 500;
+
+  /** +N 的實際總價（不要把「單價×8」當估算，誤差很大） */
+  weaponCostBulk(id: string, n = 10): number {
+    let sum = 0;
+    const lv0 = this.weaponLevel(id);
+    for (let i = 0; i < n; i++) {
+      const lv = lv0 + i;
+      if (lv >= GameState.WEAPON_MAX) break;
+      sum += Math.round(40 * Math.pow(1.32, lv));
+    }
+    return sum;
+  }
   upgradeWeapon(id: string): boolean {
     if (this.weaponLevel(id) >= GameState.WEAPON_MAX) return false;   // 上限：避免等級與成本無限膨脹
     const cost = this.weaponCost(id);

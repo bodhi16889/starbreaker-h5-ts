@@ -2,6 +2,7 @@
    頂部 CR 計數 + 倍率 + 星球進度、左側圖示列、右側瞄準鈕、底部裝備列與武器升級卡 */
 import { BUNDLES, PASS_TIERS, SAT, SATELLITES, VERSION, WEAPONS } from './config';
 import { fmt, gameState } from './GameState';
+import { GameState } from './GameState';
 import { LANG, setLang } from './i18n';
 
 type Tab = 'settings' | 'sats' | 'skills' | 'pass' | 'bundles' | 'save' | 'weapons';
@@ -172,7 +173,8 @@ export class UIManager {
       <div class="slots">${slots}</div>
       <div class="wcards">${cards}</div>
       ${locked ? `<button class="btn unlock" id="btnUnlock" ${s.gold < locked.cost ? 'disabled' : ''}>
-        UNLOCK WEAPON ${fmt(locked.cost)} CR · ${locked.w.name}</button>` : ''}`;
+        <span class="unlock-top">UNLOCK WEAPON</span>
+        <span class="unlock-sub">${locked.w.name} · ${fmt(locked.cost)} CR</span></button>` : ''}`;
 
     this.bottomEl.querySelectorAll<HTMLElement>('[data-open]').forEach((b) => {
       b.addEventListener('click', () => this.openTab(b.dataset.open as Tab));
@@ -302,14 +304,19 @@ export class UIManager {
     const rows = WEAPONS.map((w) => {
       const lv = s.weaponLevel(w.id);
       const cost = s.weaponCost(w.id);
+      const bulk = s.weaponCostBulk(w.id, 10);
       const locked = lv === 0;
+      const maxed = lv >= GameState.WEAPON_MAX;
+      const affordable = s.gold >= cost;
+      const canBulk = s.gold >= bulk && lv + 10 <= GameState.WEAPON_MAX;
+      const tag = locked ? 'Locked' : maxed ? 'MAX' : 'Lv ' + lv;
       return `<div class="row">
         <div class="grow">
-          <div class="name" style="color:${w.color}">${WEAPON_ICON[w.id]} ${w.name} <span class="lv">${locked ? '未解鎖' : 'Lv ' + lv}${eq.includes(w.id) ? ' · 出戰' : ''}</span></div>
+          <div class="name" style="color:${w.color}">${WEAPON_ICON[w.id]} ${w.name} <span class="lv">${tag}${eq.includes(w.id) ? ' · Deployed' : ''}</span></div>
           <div class="sub">${w.desc}${locked ? '' : ' · DPS ' + fmt(this.dps(w.id)) + '/s'}</div>
         </div>
-        ${locked ? '' : `<button class="btn gem" data-upw="${w.id}" ${s.gold < cost ? 'disabled' : ''}>+1<br><span class="sub">${fmt(cost)}</span></button>
-        <button class="btn" data-upw10="${w.id}" ${s.gold < cost * 8 ? 'disabled' : ''}>+10</button>`}
+        ${locked || maxed ? '' : `<button class="btn gem${affordable ? '' : ' poor'}" data-upw="${w.id}" ${affordable ? '' : 'disabled'}>+1<br><span class="sub">${fmt(cost)}</span></button>
+        <button class="btn${canBulk ? '' : ' poor'}" data-upw10="${w.id}" ${canBulk ? '' : 'disabled'}>+10<br><span class="sub">${fmt(bulk)}</span></button>`}
       </div>`;
     }).join('');
     this.modal('武器庫', `

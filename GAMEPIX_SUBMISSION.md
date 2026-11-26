@@ -1,6 +1,6 @@
 # GamePix 送審資料 — StarBreaker: Unlimited Drill
 
-最後更新：2026-11-26 ｜ 版本 **1.3.3** ｜ 上架包 `dist/starbreaker-gamepix.zip`
+最後更新：2026-11-26 ｜ 版本 **1.3.4** ｜ 上架包 `dist/starbreaker-gamepix.zip`
 
 > 後台：`my.gamepix.com` → Games → 本遊戲 → **Info / Assets / Editorial / Build** 四個頁籤。
 > 紅字沒消掉前，後面填了也不能存（Orientation、Desktop/Mobile Friendly 兩個最常漏）。
@@ -68,8 +68,8 @@ StarBreaker: Unlimited Drill is an idle space-mining game. Your ship circles a p
 | 項目 | 值 |
 |---|---|
 | 上傳檔 | `dist/starbreaker-gamepix.zip` |
-| 大小 | 27,246 bytes |
-| sha256 | `2dc8147b185a71ae95f96f522ea5e50f219ef517da1765eab2fb5aef67a9b26d` |
+| 大小 | 27,421 bytes |
+| sha256 | `4719bfe5abc27c72e4d214279394ed54aff0e4c163a92bf75c5e047b14a7dfe6` |
 | 內容 | `index.html`（根目錄）＋ `assets/index-*.js` ＋ `assets/style-*.css` |
 | 外部網址 | 只有 `integration.gamepix.com`（SDK v3） |
 

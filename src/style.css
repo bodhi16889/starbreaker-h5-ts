@@ -185,3 +185,15 @@ a { color: #5cffa8; }
   pointer-events: none; opacity: 0; transition: opacity .15s;
 }
 #toast.on { opacity: 1; }
+
+/* 買不起的升級鈕：變灰但保留可讀（disabled 會讓 iOS 直接用低對比） */
+.btn.poor, .btn:disabled { opacity: .45; filter: grayscale(.35); }
+/* HUD 大數字不要撐破版面 */
+.topbar .cr b, .topbar .coin b { display: inline-block; max-width: 44vw; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+
+/* 解鎖鈕：兩行顯示，避免長武器名把價格擠出畫面 */
+.btn.unlock { display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1.25; }
+.btn.unlock .unlock-top { font-size: 13px; letter-spacing: .04em; }
+.btn.unlock .unlock-sub { font-size: 11px; opacity: .85; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

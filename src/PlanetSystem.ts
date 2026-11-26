@@ -1,6 +1,6 @@
 /* PlanetSystem.ts — 圓形網格星球、5 種方塊、連鎖爆炸、掉落 */
 import { BALANCE, BLOCK, BlockKind, PLANET } from './config';
-import type { GameState } from './GameState';
+import { fmt, type GameState } from './GameState';
 
 export interface Block {
   x: number;
@@ -114,14 +114,10 @@ export class PlanetSystem {
     b.hp -= dmg;
     b.flash = 0.12;
     if (!opts?.silent) {
-      this.hooks.onFloater(b.x, b.y, (crit ? '✷' : '') + this.fmt(dmg) + ' CR', crit ? '#ffd166' : '#eaf6ff');
+      this.hooks.onFloater(b.x, b.y, (crit ? '✷' : '') + fmt(dmg), crit ? '#ffd166' : '#eaf6ff');
     }
     if (b.hp <= 0) this.kill(b);
     return dmg;
-  }
-
-  private fmt(n: number): string {
-    return n >= 1000 ? Math.round(n).toLocaleString('en-US') : String(Math.max(1, Math.round(n)));
   }
 
   private kill(b: Block): void {
