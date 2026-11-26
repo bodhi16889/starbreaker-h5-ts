@@ -89,6 +89,7 @@ const EXACT: Record<string, string> = {
   易爆生成: 'Volatile Rate',
   連鎖範圍: 'Chain Radius',
   攻速: 'Attack Speed',
+  暴擊: 'Crit',
   暴擊率: 'Crit Chance',
   暴擊傷害: 'Crit Damage',
   穿透: 'Pierce',

@@ -40,7 +40,7 @@ def serve(directory: pathlib.Path, port: int):
     return srv
 
 
-TABS = ["settings", "sats", "skills", "pass", "bundles", "save"]
+TABS = ["settings", "sats", "skills", "pass", "bundles", "save", "weapons"]
 
 SCRIPT = """
 () => {

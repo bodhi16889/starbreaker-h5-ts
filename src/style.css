@@ -132,10 +132,20 @@ html, body {
 }
 
 /* ---------- 彈窗 ---------- */
-.modal { position: fixed; inset: 0; z-index: 30; display: flex; align-items: flex-end; justify-content: center; background: rgba(2, 4, 10, .74); }
+.modal { position: fixed; inset: 0; height: 100vh; height: 100dvh; z-index: 30; display: flex; align-items: flex-end; justify-content: center; background: rgba(2, 4, 10, .74); }
 .modal.hidden { display: none; }
+/* GamePix SDK 載入後會注入 * { touch-action: none }，手機上整個彈窗滑不動（桌機滾輪正常）。
+   要列舉「捲動容器本身＋子節點」，而且真正在捲的是 .modal-card，不是 .modal-body。 */
+.modal, .modal *, .modal-card, .modal-card *, .modal-body, .modal-body *,
+.bottom, .bottom *, .rail, .rail * { touch-action: pan-y !important; }
+/* SDK 的 user-select: none 會讓存檔碼 textarea 連長按選取都不行 */
+textarea, input { -webkit-user-select: text !important; user-select: text !important;
+  -webkit-touch-callout: default !important; touch-action: auto !important; }
 .modal-card {
-  width: 100%; max-width: 540px; max-height: 84vh; overflow-y: auto;
+  width: 100%; max-width: 540px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  /* Safari 的 84vh 會高於可見區域（網址列算進去）→ 用 dvh，並保留 vh 當舊瀏覽器 fallback */
+  max-height: 84vh; max-height: 84dvh;
   background: #0a1120; border: 1px solid #24395f; border-radius: 16px 16px 0 0;
   padding: 12px 14px calc(16px + env(safe-area-inset-bottom, 0px));
 }
