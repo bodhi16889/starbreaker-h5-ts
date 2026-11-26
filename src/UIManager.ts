@@ -480,7 +480,7 @@ export class UIManager {
         <span class="stat">星級上限 <b>${SAT.maxLevel}★</b></span>
       </div>
       <div class="hint">星區 ${s.sector}-${s.planet} ｜ 擊破 ${fmt(s.stats.blocks)} ｜ 通關星球 ${s.stats.planets}</div>
-      <div class="hint">線上版本檔：<a href="version.json" target="_blank" rel="noopener" style="color:#5cffa8">version.json</a></div>
+      <div class="hint">版本 ${VERSION}</div>
       <div class="hint">換裝置：左側 💾 存檔 → 複製存檔碼或分享連結。</div>`);
   }
 

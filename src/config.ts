@@ -1,6 +1,6 @@
 /* config.ts — 全部平衡參數集中在這裡（其他檔案不得硬編碼數字） */
 
-export const VERSION = '1.2.1';
+export const VERSION = '1.3.0';
 
 export interface WeaponDef {
   id: string; name: string; color: string;

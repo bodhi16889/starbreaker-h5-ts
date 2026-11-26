@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 256px; height: 256px; overflow: hidden;
+    background: radial-gradient(120% 120% at 50% 40%, #14264a 0%, #070b16 70%, #05070f 100%);
+    display: grid; place-items: center; }
+  .p { position: relative; width: 168px; height: 168px; border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, #3fa7ff 0%, #1b4c9e 55%, #0b1c3a 100%);
+    box-shadow: 0 0 44px rgba(70,150,255,.75), inset -10px -14px 26px rgba(0,0,0,.55); }
+  .p::after { content: ""; position: absolute; inset: -20px; border-radius: 50%;
+    border: 3px solid rgba(126,240,255,.55); transform: rotate(-18deg) scaleX(1.22);
+    box-shadow: 0 0 22px rgba(126,240,255,.55); }
+  .core { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px;
+    border-radius: 12px; background: linear-gradient(160deg, #fff2b0, #ffb84d);
+    box-shadow: 0 0 26px rgba(255,190,80,.95); transform: rotate(45deg); }
+</style></head>
+<body><div class="p"><div class="core"></div></div></body></html>

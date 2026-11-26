@@ -156,7 +156,8 @@ def main():
         time.sleep(0.9)
         has_modal = pD.evaluate("!document.querySelector('.modal').classList.contains('hidden')")
         body = pD.eval_on_selector(".modal-card", "e=>e.innerText") if has_modal else ""
-        ok("開分享連結會問要不要載入", has_modal and "載入這個存檔" in body and "星區" in body,
+        ok("開分享連結會問要不要載入", has_modal and ("Load this save" in body or "載入這個存檔" in body)
+           and ("Galaxy" in body or "星區" in body),
            body.replace("\n", " | ")[:80])
         pD.click("[data-import-now]")
         time.sleep(0.8)

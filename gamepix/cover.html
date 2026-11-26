@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1360px; height: 850px; overflow: hidden;
+    background: radial-gradient(120% 120% at 22% 18%, #16284d 0%, #0a1020 42%, #05070f 100%);
+    font-family: system-ui, -apple-system, "Helvetica Neue", sans-serif; color: #eaf4ff; }
+  .glow { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .55; }
+  .g1 { width: 620px; height: 620px; left: -160px; top: -220px; background: #2f7bff; }
+  .g2 { width: 520px; height: 520px; right: -120px; bottom: -180px; background: #7a3dff; }
+  .wrap { position: relative; height: 100%; display: flex; align-items: center; gap: 46px; padding: 0 58px; }
+  .left { width: 700px; }
+  h1 { font-size: 92px; line-height: 1.02; letter-spacing: -.02em; font-weight: 800;
+       text-shadow: 0 0 42px rgba(90,160,255,.45); }
+  h1 em { font-style: normal; color: #7ef0ff; }
+  .rule { width: 118px; height: 4px; border-radius: 2px; margin-top: 30px;
+    background: linear-gradient(90deg, #4da3ff, #7ef0ff); }
+  .shot { position: relative; width: 470px; height: 790px; border-radius: 26px; overflow: hidden;
+    border: 1px solid rgba(120,170,255,.35);
+    box-shadow: 0 0 70px rgba(50,120,255,.45), inset 0 0 0 1px rgba(255,255,255,.05);
+    background: #05070f; }
+  .shot img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+  .planet { position: absolute; width: 560px; height: 560px; left: -190px; bottom: -300px; border-radius: 50%;
+    background: radial-gradient(circle at 62% 30%, #4a9dff 0%, #1c4f9e 45%, #0a1a36 78%, #05070f 100%);
+    box-shadow: 0 0 120px rgba(70,150,255,.45), inset -30px -40px 90px rgba(0,0,0,.65); opacity: .9; }
+  .ring { position: absolute; width: 820px; height: 250px; left: -420px; bottom: -140px;
+    border: 2px solid rgba(126,240,255,.35); border-radius: 50%; transform: rotate(-14deg);
+    box-shadow: 0 0 40px rgba(126,240,255,.25); }
+  .stars { position: absolute; inset: 0;
+    background-image:
+      radial-gradient(1.6px 1.6px at 18% 22%, #cfe4ff 40%, transparent 41%),
+      radial-gradient(1.4px 1.4px at 42% 68%, #9fc8ff 40%, transparent 41%),
+      radial-gradient(1.2px 1.2px at 66% 30%, #ffffff 40%, transparent 41%),
+      radial-gradient(1.5px 1.5px at 12% 78%, #a9d4ff 40%, transparent 41%),
+      radial-gradient(1.2px 1.2px at 30% 46%, #dbeaff 40%, transparent 41%);
+    opacity: .55; }
+</style></head>
+<body>
+  <div class="stars"></div><div class="planet"></div><div class="ring"></div>
+  <div class="glow g1"></div><div class="glow g2"></div>
+  <div class="wrap">
+    <div class="left"><h1>StarBreaker:<br><em>Unlimited Drill</em></h1><div class="rule"></div></div>
+    <div class="shot"><img src="shot.png" alt=""></div>
+  </div>
+</body></html>

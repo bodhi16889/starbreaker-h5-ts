@@ -5,6 +5,8 @@ import { gameState } from './GameState';
 import { PlanetSystem, type Block } from './PlanetSystem';
 import { Combat } from './ShipAndWeapons';
 import { UIManager } from './UIManager';
+import { ADS } from './ads';
+import { LANG, startLocalize } from './i18n';
 
 const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d', { alpha: true })!;
@@ -54,9 +56,24 @@ function rebuildWorld(): void {
 }
 
 /* ---------------- 星球推進 ---------------- */
+let clearedCount = 0;
 function nextPlanet(): void {
   state.clearPlanet();
   rebuildWorld();
+  clearedCount++;
+  /* 廣告只在「星球之間」：每 5 顆、且真的在 GamePix Player（adsAllowed）才播 */
+  if (clearedCount % 5 === 0) {
+    void playInterstitial();
+  }
+}
+
+async function playInterstitial(): Promise<void> {
+  paused = true;
+  try {
+    await ADS.interstitial();
+  } finally {
+    paused = false;
+  }
 }
 
 /* ---------------- 尺寸 ---------------- */
@@ -228,12 +245,30 @@ function roundRect(x: number, y: number, w: number, h: number, r: number): void 
 
 /* ---------------- 開機 ---------------- */
 function boot(): void {
+  ADS.loading(15);
+  document.documentElement.lang = LANG === 'zh' ? 'zh-Hant' : 'en';
   resize();
+  ADS.loading(45);
   planet.build(state.sector, state.planet);
   ui.renderHud();
+  startLocalize();          // 英文預設：DOM 邊界把中文換成英文（?lang=zh 保留中文）
+  ADS.loading(80);
   window.addEventListener('resize', resize);
   new ResizeObserver(() => resize()).observe(canvas);
   requestAnimationFrame(loop);
+  ADS.loading(100);
+
+  /* SDK pause / resume：停模擬（仍持續繪製），handler 冪等 */
+  ADS.bind(
+    () => { paused = true; },
+    () => { paused = false; },
+  );
+
+  void ADS.loaded().then(() => {
+    /* 進入遊戲後才送 gameStart（只送一次；玩家先點一下也算） */
+    window.setTimeout(() => ADS.gameStart(), 300);
+    window.addEventListener('pointerdown', () => ADS.gameStart(), { once: true });
+  });
 }
 
 /* 測試與除錯用 */
@@ -251,6 +286,7 @@ declare global {
       setPaused: (v: boolean) => void;
       blocks: () => Block[];
       planetMeta: typeof PLANET;
+      ads: typeof ADS;
     };
   }
 }
@@ -267,6 +303,7 @@ window.__game = {
   setPaused: (v) => { paused = v; },
   blocks: () => planet.blocks,
   planetMeta: PLANET,
+  ads: ADS,
 };
 
 boot();
