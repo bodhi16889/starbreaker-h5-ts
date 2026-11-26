@@ -49,6 +49,7 @@ SCRIPT = """
   let n;
   while ((n = walker.nextNode())) {
     const t = (n.nodeValue || '').trim();
+    if (n.parentElement && n.parentElement.closest('[data-keep]')) continue;
     if (/[\\u4e00-\\u9fff]/.test(t)) out.push(t);
   }
   for (const el of document.querySelectorAll('[title],[placeholder]')) {

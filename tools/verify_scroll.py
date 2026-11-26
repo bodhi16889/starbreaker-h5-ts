@@ -49,10 +49,12 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--sdk", default="on", choices=["on", "off"])
     ap.add_argument("--height", type=int, default=700, help="模擬有網址列的 iPhone 可見高度")
+    ap.add_argument("--url", default="", help="指定線上網址（不啟本機 server）")
     args = ap.parse_args()
 
     port = free_port()
-    srv = serve(ROOT / "dist", port)
+    srv = None if args.url else serve(ROOT / "dist", port)
+    target = args.url or f"http://127.0.0.1:{port}/"
     ok_all = True
     try:
         with sync_playwright() as pw:
@@ -61,7 +63,7 @@ def main() -> int:
             if args.sdk == "off":
                 ctx.route("**/gamepix.sdk.js", lambda r: r.abort())
             page = ctx.new_page()
-            page.goto(f"http://127.0.0.1:{port}/", wait_until="load")
+            page.goto(target, wait_until="load")
             page.wait_for_function("window.__game && window.__game.ready", timeout=15000)
             page.wait_for_timeout(900)
 
@@ -90,7 +92,8 @@ def main() -> int:
             ok_all &= good
             b.close()
     finally:
-        srv.shutdown()
+        if srv:
+            srv.shutdown()
     return 0 if ok_all else 1
 
 

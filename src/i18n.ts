@@ -7,15 +7,36 @@
 
 export type Lang = 'en' | 'zh';
 
+const LANG_KEY = 'sb.lang';
+
+/** 預設一律英文；只有 ?lang=zh 或玩家自己在遊戲內切換過才給中文 */
 function pickLang(): Lang {
   try {
-    return new URLSearchParams(location.search).get('lang') === 'zh' ? 'zh' : 'en';
+    const q = new URLSearchParams(location.search).get('lang');
+    if (q === 'zh') return 'zh';
+    if (q === 'en') return 'en';
+    if (localStorage.getItem(LANG_KEY) === 'zh') return 'zh';
   } catch {
-    return 'en';
+    /* 私密模式／無 localStorage */
   }
+  return 'en';
 }
 
 export const LANG: Lang = pickLang();
+
+/** 玩家主動切換語言：記住偏好後重載（存檔會即時寫入，不會掉進度） */
+export function setLang(lang: Lang): void {
+  try {
+    localStorage.setItem(LANG_KEY, lang);
+  } catch {
+    /* noop */
+  }
+  const url = new URL(location.href);
+  if (lang === 'zh') url.searchParams.set('lang', 'zh');
+  else url.searchParams.delete('lang');
+  url.hash = '';
+  location.replace(url.toString());
+}
 
 /** 完全比對用（含標點） */
 const EXACT: Record<string, string> = {
@@ -265,6 +286,8 @@ export function localize(root: ParentNode = document.body): void {
     n = walker.nextNode();
   }
   for (const t of nodes) {
+    const holder = t.parentElement?.closest('[data-keep]');
+    if (holder) continue;                       // 語言切換鈕等原生名稱不翻
     if (CJK.test(t.nodeValue || '')) {
       const v = translate(t.nodeValue || '');
       if (v !== t.nodeValue) t.nodeValue = v;

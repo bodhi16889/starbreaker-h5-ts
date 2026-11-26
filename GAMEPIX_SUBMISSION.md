@@ -1,6 +1,6 @@
 # GamePix 送審資料 — StarBreaker: Unlimited Drill
 
-最後更新：2026-11-26 ｜ 版本 **1.3.2** ｜ 上架包 `dist/starbreaker-gamepix.zip`
+最後更新：2026-11-26 ｜ 版本 **1.3.3** ｜ 上架包 `dist/starbreaker-gamepix.zip`
 
 > 後台：`my.gamepix.com` → Games → 本遊戲 → **Info / Assets / Editorial / Build** 四個頁籤。
 > 紅字沒消掉前，後面填了也不能存（Orientation、Desktop/Mobile Friendly 兩個最常漏）。
@@ -68,8 +68,8 @@ StarBreaker: Unlimited Drill is an idle space-mining game. Your ship circles a p
 | 項目 | 值 |
 |---|---|
 | 上傳檔 | `dist/starbreaker-gamepix.zip` |
-| 大小 | 27,310 bytes |
-| sha256 | `926284d322895aec60ae8d97980cb42a06a42e28ab78ddc47c9475374305e6a0` |
+| 大小 | 27,246 bytes |
+| sha256 | `2dc8147b185a71ae95f96f522ea5e50f219ef517da1765eab2fb5aef67a9b26d` |
 | 內容 | `index.html`（根目錄）＋ `assets/index-*.js` ＋ `assets/style-*.css` |
 | 外部網址 | 只有 `integration.gamepix.com`（SDK v3） |
 
@@ -87,7 +87,7 @@ StarBreaker: Unlimited Drill is an idle space-mining game. Your ship circles a p
   公開頁（GitHub Pages）`adsAllowed === false`，不會出現假廣告蓋版。
 - 載入畫面：`#loading` overlay，`loaded()` 後淡出並移除。
 - 無 `alert` / `confirm` / `prompt`；無外部連結、無第三方 SDK、無 analytics。
-- 英文預設：介面全部英文，`?lang=zh` 才顯示中文（`<html lang>` 同步切 `zh-Hant`）。
+- 英文預設：介面全部英文；玩家可在 ⚙ Settings 用「English / 中文」切換（記在 localStorage，僅玩家主動選擇才覆寫預設）。
 
 ---
 

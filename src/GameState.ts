@@ -6,7 +6,16 @@ import {
 
 const SAVE_KEY = 'starbreaker_h5_ts_save_v1';
 const SAVE_VERSION = 1;
-const SUFFIX = ['', 'K', 'M', 'B', 'T', 'aa', 'ab', 'ac', 'ad', 'ae', 'af', 'ag', 'ah'];
+/* 數字後綴：K/M/B/T 之後用兩位字母遞增（aa…zz），最多支援到 1e300，
+   不會再出現 2.92e+71ah 這種 toFixed 溢出的原始浮點字串 */
+const BASE_SUFFIX = ['', 'K', 'M', 'B', 'T'];
+const MAX_TIER = 100;
+
+function suffixFor(tier: number): string {
+  if (tier < BASE_SUFFIX.length) return BASE_SUFFIX[tier];
+  const i = tier - BASE_SUFFIX.length;          // 0 → 'aa'
+  return String.fromCharCode(97 + Math.floor(i / 26)) + String.fromCharCode(97 + (i % 26));
+}
 
 export interface SaveData {
   v: number;
@@ -27,10 +36,14 @@ export interface SaveData {
 }
 
 export function fmt(n: number): string {
-  if (!isFinite(n)) return '∞';
+  if (!isFinite(n)) return n > 0 ? '∞' : '0';
+  if (n < 0) return '-' + fmt(-n);
   if (n < 1000) return Math.floor(n).toString();
-  const tier = Math.min(Math.floor(Math.log10(n) / 3), SUFFIX.length - 1);
-  return (n / Math.pow(1000, tier)).toFixed(2) + SUFFIX[tier];
+  const tier = Math.min(Math.floor(Math.log10(n) / 3), MAX_TIER);
+  const v = n / Math.pow(1000, tier);
+  /* 三個有效位：100 以上不留小數，避免 878.32K 這種塞不進卡片的字串 */
+  const body = v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2);
+  return body + suffixFor(tier);
 }
 
 function b64encode(str: string): string {
@@ -319,7 +332,9 @@ export class GameState {
 
   /* ---------- 成本與升級 ---------- */
   weaponCost(id: string): number { return Math.round(40 * Math.pow(1.32, this.weaponLevel(id))); }
+  static readonly WEAPON_MAX = 500;
   upgradeWeapon(id: string): boolean {
+    if (this.weaponLevel(id) >= GameState.WEAPON_MAX) return false;   // 上限：避免等級與成本無限膨脹
     const cost = this.weaponCost(id);
     if (this.gold < cost) return false;
     this.gold -= cost; this.weapons[id] = this.weaponLevel(id) + 1;

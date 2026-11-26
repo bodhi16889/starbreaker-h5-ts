@@ -2,6 +2,7 @@
    頂部 CR 計數 + 倍率 + 星球進度、左側圖示列、右側瞄準鈕、底部裝備列與武器升級卡 */
 import { BUNDLES, PASS_TIERS, SAT, SATELLITES, VERSION, WEAPONS } from './config';
 import { fmt, gameState } from './GameState';
+import { LANG, setLang } from './i18n';
 
 type Tab = 'settings' | 'sats' | 'skills' | 'pass' | 'bundles' | 'save' | 'weapons';
 
@@ -263,6 +264,10 @@ export class UIManager {
       <button class="btn wide" data-open="sats">🛰 衛星</button>
       <button class="btn wide" data-open="pass">🎫 星際通行證</button>
       <button class="btn wide" data-open="bundles">🎁 特惠禮包</button>
+      <div class="row" data-keep="1"><div class="grow"><div class="name">Language</div>
+        <div class="sub">Default English · 可切換中文</div></div>
+        <button class="btn" data-lang="en"${LANG === 'en' ? ' data-active="1"' : ''}>English</button>
+        <button class="btn" data-lang="zh"${LANG === 'zh' ? ' data-active="1"' : ''}>中文</button></div>
       <button class="btn wide danger" id="btnReset">重置存檔</button>
       <div class="hint">重置會清掉本機進度；要保留就先把存檔碼複製出去。</div>`);
     const body = this.modalEl.querySelector('#mBody') as HTMLElement;
@@ -270,6 +275,9 @@ export class UIManager {
       b.addEventListener('click', () => this.openTab(b.dataset.open as Tab));
     });
     (body.querySelector('#btnSupply') as HTMLButtonElement | null)?.addEventListener('click', () => this.renderSupply());
+    body.querySelectorAll<HTMLElement>('[data-lang]').forEach((b) => {
+      b.addEventListener('click', () => setLang(b.dataset.lang as 'en' | 'zh'));
+    });
     (body.querySelector('#btnReset') as HTMLButtonElement | null)?.addEventListener('click', () => {
       if ((body.querySelector('#btnReset') as HTMLElement).dataset.armed === '1') {
         gameState.reset();
