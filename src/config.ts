@@ -1,6 +1,6 @@
 /* config.ts — 全部平衡參數集中在這裡（其他檔案不得硬編碼數字） */
 
-export const VERSION = '1.3.0';
+export const VERSION = '1.3.1';
 
 export interface WeaponDef {
   id: string; name: string; color: string;
@@ -13,8 +13,8 @@ export const PLANET = {
   gridMin: 11,
   gridMax: 23,
   hpBase: 150,
-  hpPerSector: 1.85,
-  hpPerPlanet: 1.12,
+  hpPerSector: 1.35,   // 1.85 會讓第 5 星區就打不動（實測 6 秒 0 擊破）
+  hpPerPlanet: 1.05,
   coreMul: 16,        // 核心要真的打一段時間，否則星球 0.2 秒就通關
   goldMul: 3.2,
   energyMul: 1.6,
@@ -129,6 +129,7 @@ export const SUPPLY = { gems: 1_000_000, prestige: 1_000_000, weaponLevels: 10, 
 
 export const BALANCE = {
   atkBase: 12,
+  sectorPower: 1.15,   // 每星區戰力倍率，必須跟得上 HP 曲線
   critBase: 0.05,
   critDmgBase: 1.6,
   chainJump: 5,

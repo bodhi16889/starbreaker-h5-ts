@@ -283,7 +283,9 @@ export class GameState {
   atk(): number {
     const sk = this.skillTotals();
     const reactor = 1 + GEAR[1].per * (this.gear.reactor ?? 1);
-    return BALANCE.atkBase * reactor * (1 + (sk.damage ?? 0)) * this.prestigeMult;
+    /* 星區戰力：HP 隨星區指數成長，攻擊若只隨武器等級線性成長，第 5 星區就會卡死 */
+    const sectorPower = Math.pow(BALANCE.sectorPower, this.sector - 1);
+    return BALANCE.atkBase * reactor * (1 + (sk.damage ?? 0)) * this.prestigeMult * sectorPower;
   }
 
   attackSpeed(): number {
