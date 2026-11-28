@@ -2,6 +2,9 @@
 
 最後更新：2026-11-26 ｜ 版本 **1.3.4** ｜ 上架包 `dist/starbreaker-gamepix.zip`
 
+> **打包可重現**：`build_gamepix.py` 使用固定時間戳與排序，同一份原始碼重複打包會得到同一個 sha256
+> （先前每次打包 sha 都不同，因為 ZIP 內嵌檔案 mtime，無法用來對照版本）。
+
 > 後台：`my.gamepix.com` → Games → 本遊戲 → **Info / Assets / Editorial / Build** 四個頁籤。
 > 紅字沒消掉前，後面填了也不能存（Orientation、Desktop/Mobile Friendly 兩個最常漏）。
 
@@ -68,8 +71,8 @@ StarBreaker: Unlimited Drill is an idle space-mining game. Your ship circles a p
 | 項目 | 值 |
 |---|---|
 | 上傳檔 | `dist/starbreaker-gamepix.zip` |
-| 大小 | 27,421 bytes |
-| sha256 | `4719bfe5abc27c72e4d214279394ed54aff0e4c163a92bf75c5e047b14a7dfe6` |
+| 大小 | 27,465 bytes |
+| sha256 | `6a246eaa6a601aa70f833cf06ff2b47e217adcc9fc7cb19c3c5cc99fd1549176` |
 | 內容 | `index.html`（根目錄）＋ `assets/index-*.js` ＋ `assets/style-*.css` |
 | 外部網址 | 只有 `integration.gamepix.com`（SDK v3） |
 
@@ -114,3 +117,18 @@ smoke 27 PASS、save 21 PASS、素材 6/6 尺寸與檔案大小合格。
 - 狀態（In Review / Approved / Live）**只有後台看得到**，不要用網址探測判斷。
 - 結果通常 1–3 個工作日，同時寄到註冊信箱。
 - 被打回：把原文貼回來 → 對照 §5 逐條找根因 → 重打包 → 覆蓋 Build → Resubmit。
+
+
+---
+
+## 自 v1.3.0（首次送審）以來的變更
+
+| 版本 | 內容 |
+|---|---|
+| 1.3.1 | **修正高星區方塊打不動**：HP 1.85^sector 對上線性傷害，第 5 星區就 0 擊破；改 hpPerSector 1.35、hpPerPlanet 1.05，並讓 atk 隨星區 1.15^(sector-1) 成長 |
+| 1.3.2 | **修正手機無法往上滑**：GamePix SDK 注入 `touch-action: none` 會讓彈窗滑不動；改 `pan-y !important` 並用 100dvh／84dvh 修 Safari 網址列高度。另補「暴擊」漏譯 |
+| 1.3.3 | **數字格式與升級體驗**：K/M/B/T 之後改用 aa…zz（到 1e300 不再出現 `2.92e+71ah`）；武器等級封頂 500、顯示 MAX；+10 顯示實際累計價；買不起的按鈕變灰 |
+| 1.3.4 | 跳字（canvas）改用共用格式器、UNLOCK 鈕改兩行、HUD 大數字不撐破版面；讀舊存檔時把超過上限的等級夾回 500 |
+
+回歸驗證（v1.3.4 打包後實跑）：`verify_zip.py 12/12`、`smoke 27 PASS`、`save 21 PASS`、
+`collect_strings 0 條中文`、`verify_lang ✓`（英文↔中文）、`verify_scroll ✓`（真實 touch 手勢）。

@@ -78,9 +78,15 @@ def main() -> int:
 
     if OUT.exists():
         OUT.unlink()
+    # 固定時間戳與順序：同一份原始碼重複打包要得到同一個 sha256（可重現）
+    FIXED_DT = (2020, 1, 1, 0, 0, 0)
     with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
-        for p in files_to_pack():
-            z.write(p, p.relative_to(DIST).as_posix())
+        for p in sorted(files_to_pack(), key=lambda q: q.relative_to(DIST).as_posix()):
+            data = p.read_bytes()
+            zi = zipfile.ZipInfo(p.relative_to(DIST).as_posix(), date_time=FIXED_DT)
+            zi.compress_type = zipfile.ZIP_DEFLATED
+            zi.external_attr = 0o644 << 16
+            z.writestr(zi, data)
 
     with zipfile.ZipFile(OUT) as z:
         names = z.namelist()
